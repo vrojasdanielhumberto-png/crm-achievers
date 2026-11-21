@@ -228,8 +228,6 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cls = s => String(s||'').replace(/\s+/g,'-');
 const hoyISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
-const plata = n => n == null || n === '' || isNaN(n) ? '' : '$' + Number(n).toLocaleString('es-CO') ;
-const plataCorta = n => !n ? '$0' : n >= 1e9 ? '$' + (n/1e9).toLocaleString('es-CO',{maximumFractionDigits:1}) + ' mil M' : n >= 1e6 ? '$' + (n/1e6).toLocaleString('es-CO',{maximumFractionDigits:1}) + ' M' : plata(n);
 const fDia = iso => { if(!iso) return ''; const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'}); };
 const fLarga = iso => { const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'}); };
 const hora12 = h => { if(!h) return ''; const [H,M] = h.split(':').map(Number); return ((H%12)||12) + ':' + String(M).padStart(2,'0') + (H<12?' a. m.':' p. m.'); };
@@ -337,8 +335,6 @@ function chip(t, pre){ return t ? `<span class="chip ${pre||'ch'}-${cls(t)}">${e
 function vInicio(){
   const emp = deTipo('empresa').map(r => r.datos), h = hoyISO();
   const activas = deTipo('empresa').filter(r => ['Ahora · nov–dic 2026','Recompra 2027-1'].includes(r.datos.ciclo) && !['Perdido','Pausado'].includes(r.datos.etapa));
-  const pipe = emp.filter(d => ['Propuesta','Negociación'].includes(d.etapa)).reduce((s,d) => s + (+d.valor||0), 0);
-  const ganado = emp.filter(d => d.etapa === 'Ganado').reduce((s,d) => s + (+d.valor||0), 0);
   const acts = deTipo('actividad').filter(a => !a.datos.hecho);
   const en7 = new Date(); en7.setDate(en7.getDate() + 7); const h7 = en7.toISOString().slice(0,10);
   const semana = acts.filter(a => a.datos.fecha >= h && a.datos.fecha <= h7).sort((a,b)=>(a.datos.fecha+(a.datos.hora||'')).localeCompare(b.datos.fecha+(b.datos.hora||'')));
@@ -348,11 +344,9 @@ function vInicio(){
   const cuenta = {}; deTipo('empresa').filter(r => r.datos.ciclo !== 'Base fría').forEach(r => cuenta[r.datos.etapa] = (cuenta[r.datos.etapa]||0) + 1);
   const max = Math.max(1, ...Object.values(cuenta));
   $('#vista').innerHTML = `
-    <h2 class="t">Hola, Daniel</h2><p class="sub">${fLarga(h)} · eres el dueño de todas las cuentas corporativas.</p>
+    <h2 class="t">Inicio</h2><p class="sub">${fLarga(h)}</p>
     <div class="kpis">
       <div class="kpi"><small>Cuentas activas</small><b>${activas.length}</b><span>Ahora y recompra 2027-1</span></div>
-      <div class="kpi"><small>En propuesta o negociación</small><b>${plataCorta(pipe)}</b><span>valor estimado, sin cerrar</span></div>
-      <div class="kpi"><small>Ganado 2026-2</small><b>${plataCorta(ganado)}</b><span>${emp.filter(d=>d.etapa==='Ganado').length} empresas</span></div>
       <div class="kpi"><small>Próximos 7 días</small><b>${semana.length}</b><span>reuniones y tareas</span></div>
       <div class="kpi"><small>Vencidas sin marcar</small><b style="color:${vencidas.length?'var(--rojo)':'inherit'}">${vencidas.length}</b><span>revísalas en Agenda</span></div>
       <div class="kpi"><small>Contactos en conversación</small><b>${conv}</b><span>amigos de Luis</span></div>
@@ -409,15 +403,15 @@ function vEmpresas(){
       <select class="in" id="fo"><option value="prior" ${f.orden==='prior'?'selected':''}>Ordenar: prioridad</option><option value="fecha" ${f.orden==='fecha'?'selected':''}>Ordenar: próxima fecha</option><option value="nombre" ${f.orden==='nombre'?'selected':''}>Ordenar: nombre</option></select>
       <span class="esp"></span><b>${lista.length}</b>&nbsp;empresas</div>
     <div id="cuerpo"></div>`;
-  $('#cuerpo').innerHTML = f.vista === 'tabla' ? tablaEmp(lista) : kanban(lista, ETAPAS, 'etapa', d => `<b>${esc(d.nombre)}</b><div class="fila">${chip(d.prioridad,'pr')}${d.valor?`<span class="chip">${plataCorta(+d.valor)}</span>`:''}</div>${d.proximo_paso?`<p>${d.proxima_fecha?`<b>${fDia(d.proxima_fecha)}:</b> `:''}${esc(d.proximo_paso.slice(0,110))}</p>`:''}`);
+  $('#cuerpo').innerHTML = f.vista === 'tabla' ? tablaEmp(lista) : kanban(lista, ETAPAS, 'etapa', d => `<b>${esc(d.nombre)}</b><div class="fila">${chip(d.prioridad,'pr')}</div>${d.proximo_paso?`<p>${d.proxima_fecha?`<b>${fDia(d.proxima_fecha)}:</b> `:''}${esc(d.proximo_paso.slice(0,110))}</p>`:''}`);
   enlazarLista('emp');
 }
 function tablaEmp(l){
   if (!l.length) return '<div class="panel vacio">No hay empresas con esos filtros.</div>';
-  return `<div class="tabwrap"><table class="tabla"><thead><tr><th>Empresa</th><th>Etapa</th><th>Prioridad</th><th>Tiempo</th><th>Valor</th><th>Próximo paso</th><th>Fecha</th></tr></thead><tbody>${l.slice(0,400).map(r => { const d = r.datos; return `
+  return `<div class="tabwrap"><table class="tabla"><thead><tr><th>Empresa</th><th>Etapa</th><th>Prioridad</th><th>Tiempo</th><th>Próximo paso</th><th>Fecha</th></tr></thead><tbody>${l.slice(0,400).map(r => { const d = r.datos; return `
     <tr data-id="${r.id}"><td><b>${esc(d.nombre)}</b><br><span style="color:var(--ink3);font-size:13px">${esc(d.contactos||d.industria||'')}</span></td>
     <td data-l="Etapa">${chip(d.etapa)}</td><td data-l="Prioridad">${chip(d.prioridad,'pr')}</td><td data-l="Tiempo"><span class="chip ciclo">${esc(d.ciclo||'')}</span></td>
-    <td data-l="Valor">${d.valor?plataCorta(+d.valor):'—'}</td><td class="np" data-l="Próximo paso">${esc(d.proximo_paso||'')}</td><td data-l="Fecha">${d.proxima_fecha?fDia(d.proxima_fecha):''}</td></tr>`; }).join('')}</tbody></table></div>`;
+    <td class="np" data-l="Próximo paso">${esc(d.proximo_paso||'')}</td><td data-l="Fecha">${d.proxima_fecha?fDia(d.proxima_fecha):''}</td></tr>`; }).join('')}</tbody></table></div>`;
 }
 function kanban(l, columnas, campo, tarjeta){
   return `<div class="kan">${columnas.map(c => { const cs = l.filter(r => (r.datos[campo]||columnas[0]) === c); return `
@@ -505,7 +499,7 @@ function vAjustes(){
     try { const t = await rpc('acrm_cambiar', { p_token: token, p_actual: $('#k0').value, p_nueva: $('#k1').value }); guardarToken(t, !!localStorage.getItem(LS)); toast('Contraseña cambiada'); e.target.reset(); $('#kErr').textContent=''; }
     catch(er){ $('#kErr').textContent = er.codigo === 'clave_actual_mal' ? 'La contraseña actual no es correcta.' : 'No se pudo: ' + er.message; } };
   $('#bSalir').onclick = salir;
-  $('#xE').onclick = () => csv('empresas', deTipo('empresa'), ['nombre','etapa','prioridad','ciclo','responsable','industria','contactos','producto','valor','valor_nota','proximo_paso','proxima_fecha','historial','notas']);
+  $('#xE').onclick = () => csv('empresas', deTipo('empresa'), ['nombre','etapa','prioridad','ciclo','responsable','industria','contactos','producto','proximo_paso','proxima_fecha','historial','notas']);
   $('#xC').onclick = () => csv('contactos', deTipo('contacto'), ['nombre','estado','prioridad','perfil','referente','canal','telefono','correo','enfoque','proximo_paso','proxima_fecha','notas']);
   $('#xA').onclick = () => csv('agenda', deTipo('actividad').map(a => ({...a, datos:{...a.datos, relacionado: a.datos.ref?nombreRef(a.datos.ref):''}})), ['fecha','hora','tipo','titulo','relacionado','lugar','hecho','notas']);
 }
@@ -524,16 +518,16 @@ function campo(k, t, v, tipo, ops, w){
 }
 function abrir(id, nuevoTipo){
   let r = id ? porId(id) : null;
-  if (!r) r = { id: nid(nuevoTipo === 'contacto' ? 'c' : 'e'), tipo: nuevoTipo, datos: nuevoTipo === 'contacto' ? { estado:'Por contactar', prioridad:'Media', responsable:'Daniel' } : { etapa:'Lead', prioridad:'Media', ciclo:'Ahora · nov–dic 2026', responsable:'Daniel' }, nuevo:true };
+  if (!r) r = { id: nid(nuevoTipo === 'contacto' ? 'c' : 'e'), tipo: nuevoTipo, datos: nuevoTipo === 'contacto' ? { estado:'Por contactar', prioridad:'Media', responsable:'' } : { etapa:'Lead', prioridad:'Media', ciclo:'Ahora · nov–dic 2026', responsable:'' }, nuevo:true };
   fichaId = r.id; const d = r.datos, emp = r.tipo === 'empresa';
   const campos = emp ? [
     campo('nombre','Nombre de la empresa',d.nombre,'text',null,'w'),
     campo('etapa','Etapa',d.etapa,'sel',ETAPAS), campo('prioridad','Prioridad',d.prioridad,'sel',PRIOR),
     campo('ciclo','Tiempo',d.ciclo,'sel',CICLOS), campo('responsable','Responsable',d.responsable),
     campo('industria','Industria',d.industria), campo('producto','Producto / formato',d.producto,'text'),
-    campo('valor','Valor estimado (COP)',d.valor,'number'), campo('proxima_fecha','Fecha del próximo paso',d.proxima_fecha,'date'),
+    campo('proxima_fecha','Fecha del próximo paso',d.proxima_fecha,'date'),
     campo('contactos','Contactos clave',d.contactos,'text',null,'w'),
-    campo('proximo_paso','Próximo paso',d.proximo_paso,'area'), campo('valor_nota','Nota sobre el valor',d.valor_nota,'area'),
+    campo('proximo_paso','Próximo paso',d.proximo_paso,'area'),
     campo('descripcion','Qué es / qué se ofrece',d.descripcion,'area'), campo('historial','Historial',d.historial,'area'), campo('notas','Notas',d.notas,'area')
   ] : [
     campo('nombre','Nombre',d.nombre,'text',null,'w'),
@@ -560,7 +554,7 @@ function abrir(id, nuevoTipo){
   const cerrar = () => { f.hidden = true; $('#velo').hidden = true; document.body.style.overflow = ''; fichaId = null; pintar(); };
   $('#cerrar').onclick = $('#cancelar').onclick = $('#velo').onclick = cerrar;
   $('#guardarF').onclick = async () => {
-    const nd = { ...d }; f.querySelectorAll('.form [data-k]').forEach(el => { if (el.dataset.k.startsWith('n_')) return; nd[el.dataset.k] = el.type === 'number' ? (el.value === '' ? null : Number(el.value)) : el.value.trim(); });
+    const nd = { ...d }; f.querySelectorAll('.form [data-k]').forEach(el => { if (el.dataset.k.startsWith('n_')) return; nd[el.dataset.k] = el.type === 'number' ? (el.value === '' ? null : Number(el.value)) : el.value.trim(); }); delete nd.valor; delete nd.valor_nota;
     if (!nd.nombre) return toast('Escribe el nombre');
     const antes = emp ? d.etapa : d.estado, despues = emp ? nd.etapa : nd.estado;
     try { await guardar({ id: r.id, tipo: r.tipo, datos: nd });
