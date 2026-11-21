@@ -152,7 +152,7 @@ select.in{padding:10px 12px;width:auto}
 .dia h4{margin:0 0 6px;font-size:15px;color:var(--ink2);text-transform:capitalize}
 .ag{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .ag input[type=checkbox]{width:20px;height:20px;accent-color:var(--verde)}
-.ag .h{font-weight:700;min-width:54px;color:var(--azul)}
+.ag .h{font-weight:700;min-width:84px;color:var(--azul);white-space:nowrap;font-size:14px}
 .ag .it{cursor:pointer}
 .ag.hecha .it b{text-decoration:line-through;color:var(--ink3)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;z-index:60;font-weight:600;box-shadow:var(--sh)}
@@ -267,7 +267,7 @@ async function iniciar(){
   const cod = codigoInicio();
   if (!configurada) {
     $('#aTit').textContent = 'Crea tu contraseña';
-    if (!cod) { $('#aTxt').textContent = 'Este CRM todavía no tiene contraseña. Ábrelo desde el enlace que te llegó por WhatsApp para crearla.'; $('#aCampos').innerHTML=''; $('#aBtn').hidden = true; return; }
+    if (!cod) { $('#aTxt').textContent = 'Este CRM todavía no tiene contraseña. Ábrelo desde el enlace que te llegó por WhatsApp para crearla.'; $('#aCampos').innerHTML=''; $('#aBtn').hidden = true; $('#aRecordar').parentElement.hidden = true; return; }
     $('#aTxt').textContent = 'Es la primera vez que entras. La contraseña que escribas queda guardada cifrada (nadie la puede leer, ni siquiera quien hizo el CRM). Después la puedes cambiar en Ajustes.';
     $('#aCampos').innerHTML = `<label class="l" for="c1">Contraseña nueva (mínimo 6 caracteres)</label><input class="in" id="c1" type="password" required minlength="6" autofocus>
       <label class="l" for="c2">Repítela</label><input class="in" id="c2" type="password" required minlength="6">`;
@@ -477,7 +477,7 @@ function vAgenda(){
   const hechas = todas.filter(a => a.datos.hecho).sort((a,b)=>b.datos.fecha.localeCompare(a.datos.fecha)).slice(0,25);
   const dias = {}; prox.forEach(a => (dias[a.datos.fecha] = dias[a.datos.fecha] || []).push(a));
   const fila = a => { const d = a.datos; return `<div class="ag ${d.hecho?'hecha':''}"><input type="checkbox" data-ok="${a.id}" ${d.hecho?'checked':''} title="Marcar como hecha">
-     <span class="h">${d.hora?hora12(d.hora).replace(' ',''):'—'}</span><div class="it" data-act="${a.id}"><b>${esc(d.titulo)}</b><span>${esc(d.tipo)} · ${esc(d.ref?nombreRef(d.ref):'Equipo Achievers')}${d.lugar?' · '+esc(d.lugar):''}${d.hecho?' · '+fDia(d.fecha):''}</span></div></div>`; };
+     <span class="h">${d.hora?hora12(d.hora):'—'}</span><div class="it" data-act="${a.id}"><b>${esc(d.titulo)}</b><span>${esc(d.tipo)} · ${esc(d.ref?nombreRef(d.ref):'Equipo Achievers')}${d.lugar?' · '+esc(d.lugar):''}${d.hecho?' · '+fDia(d.fecha):''}</span></div></div>`; };
   $('#vista').innerHTML = `<div class="fila"><h2 class="t esp">Agenda</h2><select class="in" id="ft"><option value="">Todo tipo</option>${TIPOS.map(t=>`<option ${f.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <p class="sub">Siguientes reuniones y tareas. Marca la casilla cuando ya pasó.</p>
     ${venc.length?`<div class="panel" style="margin-bottom:16px;border-color:#F3C4C4"><h3>⚠️ Vencidas sin marcar (${venc.length})</h3>${venc.map(fila).join('')}</div>`:''}
