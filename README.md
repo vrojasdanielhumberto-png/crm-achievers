@@ -1,6 +1,3 @@
-# CRM retos Achievers
+# CRM Achievers
 
-CRM para seguir las empresas de los retos de Achievers Lab: embudo, ficha de cada empresa, agenda y equipo.
-
-- Se entra con contraseña. Los datos van cifrados con esa contraseña.
-- Los cambios se guardan solo en el navegador de cada persona (todavía no hay base compartida).
+CRM de empresas y contactos directos de Achievers Lab. Los datos viven en una base privada (Supabase) y solo se ven con la contraseña.
